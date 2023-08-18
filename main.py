@@ -147,6 +147,17 @@ def finalize_score():
     return jsonify({'error': 'Failed to update score.'}), 500
 
 
+@app.route('/random-words', methods=['POST'])
+def generate_random_words():
+    data = request.get_json()
+    num_words = data['num_words']
+
+    meaningful_words = ['apple', 'cherry', 'banana', 'cat', 'dog', 'elephant', 'flower', 'guitar', 'house',
+                        'island', 'jungle']
+
+    random_words = random.sample(meaningful_words, num_words)
+
+    return jsonify({'random_words': random_words})
 
 
 
