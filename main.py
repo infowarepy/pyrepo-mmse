@@ -5,16 +5,16 @@ import random
 import string
 import mysql.connector
 from mysql.connector import Error
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 
 
 app = Flask(__name__)
 # Allow requests from a specific URL
-cors_config = {
-    "origins": ["http://localhost:3000/"]  # Replace with your desired URL
-}
-CORS(app, resources={r"/api/*": cors_config})
+# cors_config = {
+#     "origins": ["http://localhost:3000/"]  # Replace with your desired URL
+# }
+CORS(app, supports_credentials=True)
 
 def create_connection():
     connection = None
@@ -52,6 +52,7 @@ def generate_unique_pin():
     return pin
 
 @app.route('/start_mmse', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def generate_pin():
     data = request.get_json()
     user_id = data.get('user_id')
