@@ -52,7 +52,6 @@ def generate_unique_pin():
     return pin
 
 @app.route('/start_mmse', methods=['POST'])
-@cross_origin(supports_credentials=True)
 def generate_pin():
     data = request.get_json()
     user_id = data.get('user_id')
