@@ -11,9 +11,7 @@ from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 # Allow requests from a specific URL
-# cors_config = {
-#     "origins": ["http://localhost:3000/"]  # Replace with your desired URL
-# }
+
 # CORS(app, origins=["http://localhost:3000"], expose_headers='Authorization', supports_credentials=True)
 # cors=CORS(app)
 # app.config['CORS_HEADERS'] = 'Content-Type'
@@ -24,6 +22,9 @@ cors = CORS(app, resource={
         "origins":"*"
     }
 })
+cors_config = {
+    "origins": ["http://localhost:3000/"]  # Replace with your desired URL
+}
 
 def create_connection():
     connection = None
