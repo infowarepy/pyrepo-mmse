@@ -179,7 +179,7 @@ def generate_random_words():
 
 
 @app.route('/orientation_test', methods=['POST'])
-@cross_origin(supports_credentials=True)
+@cross_origin()
 def process_orientation_test():
     data = request.get_json()
     score = 0
