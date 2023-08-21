@@ -14,7 +14,7 @@ app = Flask(__name__)
 # cors_config = {
 #     "origins": ["http://localhost:3000/"]  # Replace with your desired URL
 # }
-CORS(app, supports_credentials=True)
+CORS(app, origins=["http://localhost:3000"], expose_headers='Authorization', supports_credentials=True)
 
 def create_connection():
     connection = None
@@ -52,6 +52,7 @@ def generate_unique_pin():
     return pin
 
 @app.route('/start_mmse', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def generate_pin():
     data = request.get_json()
     user_id = data.get('user_id')
@@ -118,6 +119,7 @@ def updateTable(columnName,pin,user_id,test_id,demo_mmse_json,score):
 
 
 @app.route('/finalize-score', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def finalize_score():
     data = request.get_json()
     pin = data['pin']
@@ -154,6 +156,7 @@ def finalize_score():
 
 
 @app.route('/random-words', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def generate_random_words():
     data = request.get_json()
     num_words = data['num_words']
@@ -168,6 +171,7 @@ def generate_random_words():
 
 
 @app.route('/orientation_test', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def process_orientation_test():
     data = request.get_json()
     score = 0
@@ -207,6 +211,7 @@ def process_orientation_test():
 
 
 @app.route('/score-of-two-list', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def process_two_lists():
     data = request.get_json()
     actual_words = data['actual_words']
@@ -236,6 +241,7 @@ def process_two_lists():
 
 
 @app.route('/subtraction-test', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def process_subtraction_test():
         data = request.get_json()
         starting_number = data['starting_number']
@@ -269,6 +275,7 @@ def process_subtraction_test():
 
 
 @app.route('/no-ifs-ands-buts', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def no_ifs_ands_buts():
     data = request.get_json()
     user_id = data.get('user_id')
