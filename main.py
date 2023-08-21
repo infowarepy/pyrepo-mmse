@@ -15,6 +15,7 @@ app = Flask(__name__)
 #     "origins": ["http://localhost:3000/"]  # Replace with your desired URL
 # }
 CORS(app, origins=["http://localhost:3000"], expose_headers='Authorization', supports_credentials=True)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 def create_connection():
     connection = None
