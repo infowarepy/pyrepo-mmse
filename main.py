@@ -14,7 +14,8 @@ app = Flask(__name__)
 # cors_config = {
 #     "origins": ["http://localhost:3000/"]  # Replace with your desired URL
 # }
-CORS(app, origins=["http://localhost:3000"], expose_headers='Authorization', supports_credentials=True)
+# CORS(app, origins=["http://localhost:3000"], expose_headers='Authorization', supports_credentials=True)
+cors=CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 def create_connection():
@@ -53,7 +54,7 @@ def generate_unique_pin():
     return pin
 
 @app.route('/start_mmse', methods=['POST'])
-@cross_origin(supports_credentials=True)
+@cross_origin()
 def generate_pin():
     data = request.get_json()
     user_id = data.get('user_id')
