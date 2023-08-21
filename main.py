@@ -21,8 +21,7 @@ cors_config = {
 CORS(app)
 cors = CORS(app, resource={
     r"/*":cors_config 
-    }
-})
+    })
 
 
 def create_connection():
