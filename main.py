@@ -310,7 +310,7 @@ def no_ifs_ands_buts():
 
     return updateTable('language_test',pin,user_id,test_id,demo_mmse_json,score) 
 
-@app.route('/process_clock_image',methods='POST')
+@app.route('/process_clock_image',methods=['POST'])
 @cross_origin(supports_credentials=True)
 def process_clock_image():
     time = request.form.get('time')
