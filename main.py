@@ -65,6 +65,7 @@ def generate_unique_pin():
             return None
     return pin
 
+# MMSE TEST
 @app.route('/start_mmse', methods=['POST'])
 @cross_origin()
 def generate_pin():
@@ -310,6 +311,7 @@ def no_ifs_ands_buts():
 
     return updateTable('language_test',pin,user_id,test_id,demo_mmse_json,score) 
 
+# CLOCK DRAWING TEST
 @app.route('/process_clock_image',methods=['POST'])
 @cross_origin(supports_credentials=True)
 def process_clock_image():
@@ -368,6 +370,7 @@ def process_clock_image():
 
     return json_response, 200, {'Content-Type': 'application/json'}
 
+# ANIMAL TEST
 @app.route('/random-animals',methods=['POST'])
 @cross_origin(supports_credentials=True)
 def get_random_animals():
@@ -408,6 +411,44 @@ def process_animal_guess():
             correct_guesses += 1
 
     return jsonify({'score': correct_guesses})
+
+#VPA TEST
+@app.route('/get-vpa-audio',methods=['POST'])
+@cross_origin(supports_credentials=True)
+def vpa_play():
+    word_pairs =[
+                    {'first_word': 'apple', 'second_word': 'fruit'},
+                    {'first_word': 'car', 'second_word': 'vehicle'},
+                    {'first_word': 'dog', 'second_word': 'animal'},
+                    {'first_word': 'sun', 'second_word': 'star'},
+                    {'first_word': 'book', 'second_word': 'read'},
+                    {'first_word': 'tree', 'second_word': 'plant'},
+                    {'first_word': 'pen', 'second_word': 'write'},
+                ]   
+    
+    engine = pyttsx3.init()
+    pygame.init()
+    def create_audio_file(text):
+        audio_file = 'output.wav'
+
+        engine.save_to_file(text, audio_file)
+        engine.runAndWait()
+
+        return audio_file
+
+    pairs_text = ''
+    for pair in word_pairs:
+        first_word = pair['first_word']
+        second_word = pair['second_word']
+        pairs_text += f"{first_word} - {second_word}. "
+
+    text = f"Let's test your knowledge! Listen to each word and provide the corresponding word as the answer. Pairs are: {pairs_text}"
+    audio_file_path = create_audio_file(text)
+    
+    if audio_file_path:
+        return jsonify({'audio_file_path': f'https://mmse-test-api.onrender.com/{audio_file_path}'})
+    else:
+        return jsonify({'message': 'Failed to retrieve audio file path.'})
 
 ## Defining the DB configuration
 db_config = {
