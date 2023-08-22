@@ -6,6 +6,11 @@ import string
 import mysql.connector
 from mysql.connector import Error
 from flask_cors import CORS, cross_origin
+import numpy as np
+import pyttsx3
+import pygame
+import speech_recognition as sr
+from utils import *
 
 
 
@@ -305,6 +310,104 @@ def no_ifs_ands_buts():
 
     return updateTable('language_test',pin,user_id,test_id,demo_mmse_json,score) 
 
+@app.route('/process_clock_image',mehods='POST')
+@cross_origin(supports_credentials=True)
+def process_clock_image():
+    time = request.form.get('time')
+    uploaded_file = request.files['image']
+
+    total_score = 0.0
+    circle_score = 0.0
+    digits_score = 0.0
+    lines_score = 0.0
+    time_match_score = 0.0
+
+    file_array = np.frombuffer(uploaded_file.read(), np.uint8)
+    image = cv2.imdecode(file_array, cv2.IMREAD_COLOR)
+    processed_image = preprocess_image(image)
+
+    number_lists = []
+    circle_info = detect_circle(processed_image)
+    if circle_info is not None:
+        center, radius, circularity = circle_info
+        circle_score = circularity
+
+        lines_in_circle = detect_lines_in_circle(image, center)
+        if lines_in_circle is not None:
+            lines_score = min(1, len(lines_in_circle) * 0.5)
+        else:
+            lines_score = 0
+
+        numbers = determine_numbers(lines_in_circle)
+        number_lists = list(numbers.keys())
+
+    numbers = extract_handwritten_numbers(processed_image)
+    digits_score = (min(12, len(numbers))) / 10
+
+    possible_timings = generate_timings(number_lists)
+
+    match = 0
+    if len(possible_timings) > 0:
+        for i, timing in enumerate(possible_timings):
+            pair_num = i + 1
+            temp = str(timing[0]) + ":" + str(timing[1])
+            match = max(match, calculate_score(time, temp))
+
+    time_match_score = match
+    total_score = circle_score + digits_score + lines_score + time_match_score
+
+    response = {
+        'total_score': total_score,
+        'circle_score': circle_score,
+        'digits_score': digits_score,
+        'lines_score': lines_score,
+        'time_match_score': time_match_score
+    }
+
+    json_response = json.dumps(response)
+
+    return json_response, 200, {'Content-Type': 'application/json'}
+
+@app.route('/random-animals',methods='POST')
+@cross_origin(supports_credentials=True)
+def get_random_animals():
+    animals = [
+        {'name': 'elephant', 'image': 'elephant.jpg'},
+        {'name': 'lion', 'image': 'lion.jpg'},
+        {'name': 'cat', 'image': 'cat.jpg'},
+        {'name': 'dog', 'image': 'dog.jpg'},
+        {'name': 'tiger', 'image': 'tiger.jpg'},
+        {'name': 'horse', 'image': 'horse.jpg'},
+    ]
+
+    data = request.get_json()
+    num_animals = data['num_animals']
+
+    random_animals = random.sample(animals, num_animals)
+
+    response = []
+    for animal in random_animals:
+        animal_data = {
+            'name': animal['name'],
+            'image': f'https://mmse-api.onrender.com/static/img/{animal["image"]}'
+        }
+        response.append(animal_data)
+    return jsonify({'animals': response})
+
+@app.route('/animal-guess',methods=['POST'])
+@cross_origin(supports_credentials=True)
+def process_animal_guess():
+    guesses = request.get_json()  
+    correct_guesses = 0
+
+    for guess in guesses:
+        actual_animal = guess['actual_animal']
+        guessed_animal = guess['guessed_animal']
+
+        if actual_animal.lower() == guessed_animal.lower():
+            correct_guesses += 1
+
+    return jsonify({'score': correct_guesses})
 
 ## Defining the DB configuration
 db_config = {
