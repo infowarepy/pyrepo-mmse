@@ -2,3 +2,13 @@ Flask
 mysql-connector-python
 gunicorn
 flask-cors
+flask
+opencv-python 
+numpy 
+tensorflow
+keras 
+Pillow 
+matplotlib
+pyttsx3
+pygame
+SpeechRecognition
