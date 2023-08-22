@@ -368,7 +368,7 @@ def process_clock_image():
 
     return json_response, 200, {'Content-Type': 'application/json'}
 
-@app.route('/random-animals',methods='POST')
+@app.route('/random-animals',methods=['POST'])
 @cross_origin(supports_credentials=True)
 def get_random_animals():
     animals = [
