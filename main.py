@@ -11,7 +11,9 @@ import pyttsx3
 import pygame
 import speech_recognition as sr
 from utils import *
-
+import io 
+from pydub import AudioSegment
+from moviepy.editor import AudioFileClip
 
 
 app = Flask(__name__)
@@ -292,16 +294,34 @@ def process_subtraction_test():
 @app.route('/no-ifs-ands-buts', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def no_ifs_ands_buts():
-    data = request.get_json()
+    data = request.form
     user_id = data.get('user_id')
     test_id = data.get('test_id')
-    phrase = data.get('phrase')
+    audio_file = request.files['audio']
+
+    wav_audio = io.BytesIO()
+    audio_clip = AudioFileClip(audio_file)
+    audio_clip.write_audiofile(wav_audio, codec='pcm_s16le')
+    
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(wav_audio) as source:
+        audio_data = recognizer.record(source)
+    try:
+        phrase = recognizer.recognize_google(audio_data)
+    except sr.UnknownValueError:
+        phrase='-1'
+    except sr.RequestError as e:
+        phrase='-2'
     pin = data['pin'] 
 
     score = 0
 
     if phrase.lower() == "no ifs ands or buts":
         score += 1
+    if phrase=='-1':
+        return jsonify({'score': -1})
+    if phrase=='-2':
+        return jsonify({'score': -2})
 
     demo_mmse_data = {
             'phrase': phrase,
@@ -449,6 +469,39 @@ def vpa_play():
         return jsonify({'audio_file_path': f'https://mmse-test-api.onrender.com/{audio_file_path}'})
     else:
         return jsonify({'message': 'Failed to retrieve audio file path.'})
+
+@app.route('/get-vpa-text-question',methods=['POST'])
+@cross_origin(supports_credentials=True)
+def get_vpa_text_question():
+    word_pairs = [
+        {'first_word': 'apple', 'second_word': 'fruit'},
+        {'first_word': 'car', 'second_word': 'vehicle'},
+        {'first_word': 'dog', 'second_word': 'animal'},
+        {'first_word': 'sun', 'second_word': 'star'},
+        {'first_word': 'book', 'second_word': 'read'},
+        {'first_word': 'tree', 'second_word': 'plant'},
+        {'first_word': 'pen', 'second_word': 'write'},
+    ]  
+    data = request.get_json()
+    selected_pairs = random.sample(word_pairs, data['num_questions'])
+    return jsonify({'selected_pairs': selected_pairs})
+
+@app.route('/vpa_test',methods=['POST'])
+@cross_origin(supports_credentials=True)
+def vpa_test():
+    data = request.get_json()
+    user_responses = [response.lower() for response in data['user_responses']]
+    filtered_responses = [pair['second_word'].lower() for pair in data['original_responses']]
+
+    score = 0 
+
+    for i in range(0,len(user_responses)) :
+        if i >= len(filtered_responses) :
+            break
+        if filtered_responses[i] == user_responses[i]:
+            score+=1 
+
+    return jsonify({'score':score})
 
 ## Defining the DB configuration
 db_config = {
