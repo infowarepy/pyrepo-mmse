@@ -182,6 +182,7 @@ def updateTable(columnName,pin,user_id,test_id,demo_mmse_json,score):
 
 @app.route('/finalize-score', methods=['POST'])
 @cross_origin(supports_credentials=True)
+@require_jwt_authentication
 def finalize_score():
     data = request.get_json()
     pin = data['pin']
