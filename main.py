@@ -210,7 +210,7 @@ def finalize_score():
                     cursor.execute(update_query, (final_score, severity, pin))
                     connection.commit()
                     print("Total score and severity updated successfully.")
-                    return jsonify({'message': 'Score updated successfully.'})
+                    return jsonify({'message': 'Score updated successfully.','severity':severity})
                 else:
                     print("Invalid Pin")
                     return jsonify({'error': 'Invalid PIN.'}), 400
