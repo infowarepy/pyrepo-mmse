@@ -14,7 +14,9 @@ from utils import *
 import io 
 from pydub import AudioSegment
 from moviepy.editor import AudioFileClip
-
+from functools import wraps
+import jwt
+from config import SECRET_KEY
 
 app = Flask(__name__)
 # Allow requests from a specific URL
@@ -67,6 +69,29 @@ def generate_unique_pin():
             return None
     return pin
 
+#decorator for JWT authentication
+def require_jwt_authentication(route_function):
+    @wraps(route_function)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+
+        if not token:
+            return jsonify({'error': 'Authorization token is missing.'}), 401
+
+        try:
+            decoded_token = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            # Check if the provided PIN matches the PIN in the token
+            if decoded_token['pin'] != request.json['pin']:
+                return jsonify({'error': 'Invalid PIN.'}), 401
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired.'}), 401
+        except jwt.DecodeError:
+            return jsonify({'error': 'Invalid token.'}), 401
+
+        return route_function(*args, **kwargs)
+
+    return decorated_function
+
 # MMSE TEST
 @app.route('/start_mmse', methods=['POST'])
 @cross_origin()
@@ -102,6 +127,27 @@ def generate_pin():
 
     return jsonify({'pin': pin})
 
+@app.route('/login', methods=['POST'])
+@cross_origin(supports_credentials=True)
+def login():
+    data = request.get_json()
+    provided_pin = data.get('pin')
+    connection = create_connection()
+    cursor = connection.cursor()
+    query = "SELECT COUNT(*) FROM demo_mmse WHERE pin = %s"
+    cursor.execute(query, (provided_pin,))
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    
+    #generating jwt if pin exist
+    if result and result[0] > 0:
+        token_payload = {'pin': provided_pin}
+        token = jwt.encode(token_payload, SECRET_KEY, algorithm='HS256')
+        token_str = token.decode('utf-8')
+        return jsonify({'token': token_str})
+    
+    return jsonify({'message': 'Invalid PIN'}), 401
 
 
 
@@ -189,6 +235,7 @@ def generate_random_words():
 
 @app.route('/orientation_test', methods=['POST'])
 @cross_origin()
+@require_jwt_authentication
 def process_orientation_test():
     data = request.get_json()
     score = 0
@@ -229,6 +276,7 @@ def process_orientation_test():
 
 @app.route('/score-of-two-list', methods=['POST'])
 @cross_origin(supports_credentials=True)
+@require_jwt_authentication
 def process_two_lists():
     data = request.get_json()
     actual_words = data['actual_words']
@@ -259,6 +307,7 @@ def process_two_lists():
 
 @app.route('/subtraction-test', methods=['POST'])
 @cross_origin(supports_credentials=True)
+@require_jwt_authentication
 def process_subtraction_test():
         data = request.get_json()
         starting_number = data['starting_number']
@@ -293,35 +342,18 @@ def process_subtraction_test():
 
 @app.route('/no-ifs-ands-buts', methods=['POST'])
 @cross_origin(supports_credentials=True)
+@require_jwt_authentication
 def no_ifs_ands_buts():
-    data = request.form
+    data = request.get_json()
     user_id = data.get('user_id')
     test_id = data.get('test_id')
-    audio_file = request.files['audio']
-
-    wav_audio = io.BytesIO()
-    audio_clip = AudioFileClip(audio_file)
-    audio_clip.write_audiofile(wav_audio, codec='pcm_s16le')
-    
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(wav_audio) as source:
-        audio_data = recognizer.record(source)
-    try:
-        phrase = recognizer.recognize_google(audio_data)
-    except sr.UnknownValueError:
-        phrase='-1'
-    except sr.RequestError as e:
-        phrase='-2'
+    phrase = data.get('phrase')
     pin = data['pin'] 
 
     score = 0
 
     if phrase.lower() == "no ifs ands or buts":
         score += 1
-    if phrase=='-1':
-        return jsonify({'score': -1})
-    if phrase=='-2':
-        return jsonify({'score': -2})
 
     demo_mmse_data = {
             'phrase': phrase,
@@ -329,7 +361,7 @@ def no_ifs_ands_buts():
         }
     demo_mmse_json = json.dumps(demo_mmse_data)
 
-    return updateTable('language_test',pin,user_id,test_id,demo_mmse_json,score) 
+    return updateTable('language_test',pin,user_id,test_id,demo_mmse_json,score)
 
 # CLOCK DRAWING TEST
 @app.route('/process_clock_image',methods=['POST'])
