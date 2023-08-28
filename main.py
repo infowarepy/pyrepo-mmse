@@ -16,8 +16,9 @@ from pydub import AudioSegment
 from moviepy.editor import AudioFileClip
 from functools import wraps
 import jwt
-from config import SECRET_KEY
+import os
 
+SECRET_KEY = os.environ.get('SECRET_KEY')
 app = Flask(__name__)
 # Allow requests from a specific URL
 
