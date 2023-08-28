@@ -12,3 +12,6 @@ matplotlib
 pyttsx3
 pygame
 SpeechRecognition
+from functools import wraps
+import jwt
+import os
