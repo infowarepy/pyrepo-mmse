@@ -12,6 +12,4 @@ matplotlib
 pyttsx3
 pygame
 SpeechRecognition
-from functools import wraps
-import jwt
-import os
+PyJWT==1.6.4
