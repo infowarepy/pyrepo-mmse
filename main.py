@@ -12,8 +12,6 @@ import pygame
 import speech_recognition as sr
 from utils import *
 import io 
-from pydub import AudioSegment
-from moviepy.editor import AudioFileClip
 from functools import wraps
 import jwt
 import os
@@ -188,8 +186,16 @@ def finalize_score():
     data = request.get_json()
     pin = data['pin']
     final_score = data['final_score']
-    severity = data['severity']
-
+    max_score=data['max_score']
+    ratio=final_score/max_score
+    
+    if ratio>=0.8:
+        severity='Normal Cognition'
+    elif ratio>=0.6:
+        severity='Mild cognitive impairment'
+    else:
+        severity='Severe cognitive impairment'
+    
     connection = create_connection()
     if connection is not None:
         try:
